@@ -1,0 +1,74 @@
+version: "3.9"
+
+services:
+  elasticsearch:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:8.1.0"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - network.host=0.0.0.0
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - ELASTIC_PASSWORD=elastic
+      # Used to avoid huge memory consumption by Elasticsearch.
+      # Otherwise, you need to extend the Docker limits
+      # to avoid continuous container crashes due to lack of memory.
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  logstash:
+    image: "docker.elastic.co/logstash/logstash:8.1.0"
+    command: --log.level=debug --enable-local-plugin-development
+    ports:
+      - "9600:9600"
+    environment:
+      - ELASTIC_PASSWORD=elastic
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: "docker.elastic.co/beats/filebeat:8.1.0"
+    environment:
+      - ELASTIC_PASSWORD=elastic
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - logs_dir:/logs
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: "docker.elastic.co/kibana/kibana:8.1.0"
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTIC_PASSWORD=elastic
+    depends_on:
+    - elasticsearch
+
+  grafana:
+    image: "grafana/grafana:8.4.2"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+
+  loki:
+    image: "grafana/loki:2.4.2"
+    ports:
+      - "3100:3100"
+
+  flog:
+    image: "mingrammer/flog:0.4.3"
+    command: -f json -t log -o /tmp/log/json.log -d 200ms -w -l
+    volumes:
+      - logs_dir:/tmp/log
+
+volumes:
+  logs_dir:
