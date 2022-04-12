@@ -1,0 +1,11 @@
+logging.level: info
+logging.to_files: false
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - '/logs/*.log'
+
+output.logstash:
+  hosts: ["logstash:5044"]
