@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  grafana:
+    image: "grafana/grafana:8.4.2"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+
+  loki:
+    image: "grafana/loki:2.4.2"
+    ports:
+      - "3100:3100"
+
+  flog:
+    image: "mingrammer/flog:0.4.3"
+    command: flog -f json -t stdout -w -l
+    logging:
+      driver: "loki"
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
