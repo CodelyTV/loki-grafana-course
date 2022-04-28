@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  grafana:
+    image: "grafana/grafana:8.4.2"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=mail:1025
+
+  loki:
+    image: "grafana/loki:2.4.2"
+    command: --config.file=/mnt/config/loki.yml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki.yml:/mnt/config/loki.yml
+      - ./rules.yml:/etc/loki/rules/fake/rules.yml
+
+  mail:
+    image: "dockage/mailcatcher:0.7.1"
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+volumes:
+  logs_dir:
