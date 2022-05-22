@@ -22,7 +22,7 @@ services:
         hard: -1
 
   logstash:
-    image: "logstash"
+    image: "docker.elastic.co/logstash/logstash:8.2.0"
     command: --log.level=debug --enable-local-plugin-development
     ports:
       - "9600:9600"
